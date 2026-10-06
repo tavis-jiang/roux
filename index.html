@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>给你的</title>
+<style>
+  :root{
+    --ink: #f4f1ea;
+    --muted: rgba(244,241,234,.62);
+    --accent: #ff9db5;
+    --accent2: #ffd6a5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:#0b0710;
+    color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Noto Sans SC",system-ui,-apple-system,sans-serif;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- 背景光晕 ---------- */
+  .bg{position:fixed;inset:-20%;z-index:0;filter:blur(90px);opacity:.85}
+  .blob{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:drift 22s ease-in-out infinite}
+  .b1{width:52vmax;height:52vmax;left:-8vmax;top:-10vmax;background:#5b2a6b;animation-delay:-2s}
+  .b2{width:44vmax;height:44vmax;right:-10vmax;top:8vmax;background:#8c2f4a;animation-delay:-7s}
+  .b3{width:48vmax;height:48vmax;left:22vmax;bottom:-18vmax;background:#2a3f6b;animation-delay:-12s}
+  @keyframes drift{
+    0%,100%{transform:translate3d(0,0,0) scale(1)}
+    33%{transform:translate3d(4vmax,-3vmax,0) scale(1.08)}
+    66%{transform:translate3d(-3vmax,4vmax,0) scale(.95)}
+  }
+  #petals{position:fixed;inset:0;z-index:1;pointer-events:none}
+
+  /* ---------- 主体 ---------- */
+  .stage{
+    position:relative;z-index:2;height:100%;height:100dvh;
+    display:flex;align-items:center;justify-content:center;
+    padding:max(24px,env(safe-area-inset-top)) 22px max(24px,env(safe-area-inset-bottom));
+  }
+  .card{
+    width:min(680px,100%);
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.11);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border-radius:24px;
+    padding:clamp(26px,5vw,46px);
+    box-shadow:0 30px 90px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.09);
+    opacity:0;transform:translateY(18px) scale(.985);
+    transition:opacity .9s ease, transform .9s cubic-bezier(.2,.7,.3,1);
+  }
+  .card.in{opacity:1;transform:none}
+
+  .eyebrow{
+    font-size:12px;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:22px;
+  }
+  .lines{font-size:clamp(17px,2.3vw,21px);line-height:2;min-height:2em}
+  .line{opacity:0;transform:translateY(6px);transition:opacity .5s, transform .5s}
+  .line.in{opacity:1;transform:none}
+  .caret{display:inline-block;width:9px;height:1.05em;vertical-align:-.16em;
+    background:var(--accent);margin-left:3px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  .reveal{margin-top:30px;display:none}
+  .reveal.in{display:block;animation:rise .8s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .final-title{
+    font-size:clamp(22px,3.6vw,32px);font-weight:700;line-height:1.5;
+    background:linear-gradient(100deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .final-text{margin-top:14px;font-size:clamp(15px,2vw,17px);line-height:2;color:rgba(244,241,234,.9);
+    white-space:pre-line}
+  .sign{margin-top:26px;text-align:right;font-size:14px;color:var(--muted);letter-spacing:.06em}
+
+  .photos{margin-top:26px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+  .photos img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);animation:rise .9s both}
+
+  .btn{
+    margin-top:28px;appearance:none;cursor:pointer;
+    padding:13px 30px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.22);
+    background:linear-gradient(100deg,rgba(255,157,181,.22),rgba(255,214,165,.18));
+    color:var(--ink);font-size:15px;font-family:inherit;letter-spacing:.08em;
+    transition:transform .25s, box-shadow .25s, background .25s;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(255,157,181,.22);background:rgba(255,157,181,.3)}
+  .btn:active{transform:translateY(0)}
+
+  /* ---------- 「惊喜」按钮 ---------- */
+  .btn-surprise{
+    display:block;margin:30px auto 0;
+    padding:13px 42px;font-size:16px;letter-spacing:.3em;text-indent:.3em;
+    border:1px solid rgba(255,157,181,.5);
+    background:linear-gradient(100deg,rgba(255,157,181,.3),rgba(255,120,160,.22));
+    box-shadow:0 0 0 0 rgba(255,157,181,.5);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(255,157,181,.42)}
+    50%{box-shadow:0 0 0 14px rgba(255,157,181,0)}
+  }
+
+  /* ---------- 满屏爱心层 ---------- */
+  .hearts-layer{
+    position:fixed;inset:0;z-index:50;
+    background:radial-gradient(circle at 50% 60%,rgba(60,10,35,.86),rgba(8,4,12,.96));
+    opacity:0;pointer-events:none;transition:opacity .55s ease;
+  }
+  .hearts-layer.on{opacity:1;pointer-events:auto;cursor:pointer}
+  #heartsCanvas{width:100%;height:100%;display:block}
+  .hearts-tip{
+    position:absolute;left:0;right:0;bottom:max(20px,env(safe-area-inset-bottom));
+    text-align:center;font-size:12.5px;letter-spacing:.22em;
+    color:rgba(255,220,232,.5);opacity:0;transition:opacity .8s ease .9s;
+  }
+  .hearts-layer.on .hearts-tip{opacity:1}
+
+  .hint{position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));
+    z-index:3;text-align:center;font-size:12px;color:rgba(244,241,234,.34);letter-spacing:.1em}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<canvas id="petals"></canvas>
+
+<main class="stage">
+  <section class="card" id="card">
+    <div class="eyebrow" id="eyebrow"></div>
+    <div class="lines" id="lines"></div>
+
+    <div class="reveal" id="reveal">
+      <div class="final-title" id="finalTitle"></div>
+      <div class="final-text" id="finalText"></div>
+      <div class="photos" id="photos"></div>
+      <div class="sign" id="sign"></div>
+      <button class="btn btn-surprise" id="surpriseBtn">惊喜</button>
+    </div>
+
+    <button class="btn" id="next">继续 →</button>
+  </section>
+</main>
+<div class="hint" id="hint"></div>
+
+<!-- 满屏爱心层 -->
+<div class="hearts-layer" id="heartsLayer">
+  <canvas id="heartsCanvas"></canvas>
+  <div class="hearts-tip" id="heartsTip">点任意位置关闭</div>
+</div>
+
+<script>
+/* ============================================================
+   只改下面这一块就行，改完保存 —— 她刷新页面就能看到新内容
+   ============================================================ */
+const CONFIG = {
+  browserTitle: "hi~ 刘若汐",      // 浏览器标签页标题
+  eyebrow: "",                     // 顶部小字，留空 = 不显示
+  hint: "点一下“继续”，或者按空格键",
+
+  lines: [                          // 一句一句打字出来
+    "hi~，刘若汐。",
+    "现在看到的界面，",
+    "好像不是实时的，我也忘了，在我电脑上跑的",
+    "经过1000多公里，一堆路由器还有一条海底光缆",
+    "嗯，准时宝，准时送达",
+    "来自我的电脑，直接送到你的屏幕上",
+  ],
+
+  finalTitle: "所以，想跟你说的是：",        // 点完“继续”后出现
+  finalText: "今天又是很喜欢你的一天捏，好想你哇，\n这个东西一直存在，直到你想关掉它为止。",
+  sign: "—— 你的蒋蒋",
+
+  photos: [],        // 放照片：把图片丢进这个文件夹，然后写 ["./photos/1.jpg", "./photos/2.jpg"]
+  music: "",         // 放音乐：写 "./music.mp3"；留空则没有音乐
+  petals: 26,        // 飘落花瓣数量，0 = 关闭
+  surpriseLabel: "惊喜",   // 最后那个按钮上的字
+  heartCount: 220    // 满屏爱心的最大数量，卡顿就调小
+};
+/* ======================= 以下不用改 ======================= */
+
+document.title = CONFIG.browserTitle;
+const eyebrowEl = document.getElementById("eyebrow");
+if (CONFIG.eyebrow) eyebrowEl.textContent = CONFIG.eyebrow;
+else eyebrowEl.remove();                    // 留空则不占位置
+document.getElementById("hint").textContent = CONFIG.hint;
+
+const linesEl  = document.getElementById("lines");
+const nextBtn  = document.getElementById("next");
+const revealEl = document.getElementById("reveal");
+
+/* ---- 打字机 ---- */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function typeLine(text){
+  const el = document.createElement("div");
+  el.className = "line";
+  const span = document.createElement("span");
+  const caret = document.createElement("i");
+  caret.className = "caret";
+  el.append(span, caret);
+  linesEl.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("in"));
+
+  for (const ch of text){
+    span.textContent += ch;
+    await sleep(ch === "，" || ch === "。" ? 130 : 46);
+  }
+  caret.remove();
+  await sleep(320);
+}
+
+/* ---- 主流程 ---- */
+let revealed = false;
+
+async function play(){
+  document.getElementById("card").classList.add("in");
+  await sleep(700);
+  for (const l of CONFIG.lines){
+    if (revealed) return;          // 已经跳到结尾就别继续打字了
+    await typeLine(l);
+  }
+  nextBtn.textContent = "看完了 →";
+}
+
+async function showFinal(){
+  if (revealed) return;
+  revealed = true;
+  linesEl.style.display = "none";
+  nextBtn.style.display = "none";
+
+  document.getElementById("finalTitle").textContent = CONFIG.finalTitle;
+  document.getElementById("finalText").textContent  = CONFIG.finalText;
+  document.getElementById("sign").textContent       = CONFIG.sign;
+
+  if (CONFIG.photos.length){
+    const box = document.getElementById("photos");
+    CONFIG.photos.forEach((src, i) => {
+      const img = document.createElement("img");
+      img.src = src; img.alt = "";
+      img.style.animationDelay = (i * 0.12) + "s";
+      box.appendChild(img);
+    });
+  }
+  revealEl.classList.add("in");
+
+  if (CONFIG.music){
+    const a = new Audio(CONFIG.music);
+    a.loop = true; a.volume = .5;
+    a.play().catch(()=>{});        // 浏览器可能拦截，忽略即可
+  }
+  document.getElementById("hint").textContent = "";
+}
+
+nextBtn.addEventListener("click", showFinal);
+addEventListener("keydown", e => {
+  if (e.code === "Space" || e.code === "Enter" || e.code === "ArrowRight"){
+    e.preventDefault();
+    if (!revealed && nextBtn.textContent.includes("看完")) showFinal();
+    else if (!revealed && linesEl.children.length > 1) showFinal();
+  }
+});
+
+play();
+
+/* ---- 飘落花瓣 ---- */
+(function(){
+  const n = CONFIG.petals|0;
+  if (!n) return;
+  const cv = document.getElementById("petals");
+  const ctx = cv.getContext("2d");
+  let W, H, parts = [];
+
+  function reset(p){
+    p.x = Math.random() * W;
+    p.y = -20 - Math.random() * H * .4;
+    p.r = 4 + Math.random() * 7;
+    p.vy = .35 + Math.random() * .85;
+    p.vx = -.35 + Math.random() * .7;
+    p.a = Math.random() * Math.PI * 2;
+    p.va = (-.5 + Math.random()) * .02;
+    p.o = .18 + Math.random() * .42;
+    p.hue = Math.random() < .5 ? 345 : 22;
+  }
+  function resize(){
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.width = innerWidth  * dpr;
+    H = cv.height = innerHeight * dpr;
+    cv.style.width = innerWidth + "px";
+    cv.style.height = innerHeight + "px";
+  }
+  resize();
+  addEventListener("resize", resize);
+  parts = Array.from({length:n}, () => { const p = {}; reset(p); p.y = Math.random()*H; return p; });
+
+  (function loop(){
+    ctx.clearRect(0,0,W,H);
+    for (const p of parts){
+      p.y += p.vy * devicePixelRatio;
+      p.x += (p.vx + Math.sin(p.y/90) * .35) * devicePixelRatio;
+      p.a += p.va;
+      if (p.y > H + 30) reset(p);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.a);
+      ctx.globalAlpha = p.o;
+      ctx.fillStyle = `hsl(${p.hue} 82% 76%)`;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.r * devicePixelRatio, p.r * .62 * devicePixelRatio, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    requestAnimationFrame(loop);
+  })();
+})();
+
+/* ---- 「惊喜」按钮：满屏小爱心 ---- */
+(function(){
+  document.getElementById("surpriseBtn").textContent = CONFIG.surpriseLabel;
+
+  const layer = document.getElementById("heartsLayer");
+  const cv    = document.getElementById("heartsCanvas");
+  const ctx   = cv.getContext("2d");
+  let W = 0, H = 0, hearts = [], running = false, raf = null, DPR = 1, glow = .9;
+
+  /* 手机上爱心少一点、像素密度封顶、发光弱一点，避免掉帧 */
+  const MAX = innerWidth < 700 ? Math.min(CONFIG.heartCount | 0, 110) : (CONFIG.heartCount | 0);
+
+  function resize(){
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    DPR = dpr;
+    glow = innerWidth < 700 ? .45 : .9;
+    W = cv.width  = innerWidth  * dpr;
+    H = cv.height = innerHeight * dpr;
+    cv.style.width  = innerWidth  + "px";
+    cv.style.height = innerHeight + "px";
+  }
+  addEventListener("resize", () => { if (running) resize(); });
+
+  /* 心形参数方程 —— 不依赖字体，任何系统都长一样 */
+  function heartPath(size){
+    ctx.beginPath();
+    for (let t = 0; t <= Math.PI * 2 + .1; t += .06){
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+      const px =  x * size / 32;
+      const py = -y * size / 32;
+      if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+
+  function makeHeart(atBottom){
+    const dpr = DPR;
+    const size = (9 + Math.random() * 20) * dpr;
+    return {
+      x: Math.random() * W,
+      y: atBottom ? H + size + Math.random() * H * .25 : Math.random() * H,
+      size,
+      vy: (.7 + Math.random() * 1.9) * dpr,               // 向上速度
+      vx: (-.5 + Math.random()) * .7 * dpr,
+      sway: Math.random() * Math.PI * 2,
+      swayAmp: (.4 + Math.random() * 1.1) * dpr,
+      rot: (-.35 + Math.random() * .7),
+      spin: (-.012 + Math.random() * .024),
+      hue: Math.random() < .72 ? 335 + Math.random() * 25 : 8 + Math.random() * 16,
+      light: 62 + Math.random() * 16,
+      alpha: .55 + Math.random() * .45
+    };
+  }
+
+  function frame(){
+    ctx.clearRect(0, 0, W, H);
+
+    /* 持续补充，直到铺满 */
+    if (hearts.length < MAX){
+      for (let i = 0; i < 4 && hearts.length < MAX; i++) hearts.push(makeHeart(true));
+    }
+
+    for (let i = hearts.length - 1; i >= 0; i--){
+      const h = hearts[i];
+      h.y -= h.vy;
+      h.sway += .022;
+      h.x += h.vx + Math.sin(h.sway) * h.swayAmp;
+      h.rot += h.spin;
+
+      /* 顶部淡出后回收，循环利用 */
+      const fadeTop = Math.min(1, h.y / (H * .34));
+      if (h.y < -h.size * 2.2){ hearts.splice(i, 1); continue; }
+
+      ctx.save();
+      ctx.translate(h.x, h.y);
+      ctx.rotate(h.rot);
+      ctx.globalAlpha = h.alpha * fadeTop;
+      ctx.fillStyle = `hsl(${h.hue} 88% ${h.light}%)`;
+      ctx.shadowColor = `hsla(${h.hue},95%,70%,.85)`;
+      ctx.shadowBlur  = h.size * glow;
+      heartPath(h.size);
+      ctx.fill();
+      ctx.restore();
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  function open(){
+    if (running) return;
+    running = true;
+    resize();
+    hearts = [];
+    for (let i = 0; i < MAX * .45; i++) hearts.push(makeHeart(false));  // 一上来就有点底子
+    layer.classList.add("on");
+    frame();
+  }
+
+  function close(){
+    if (!running) return;
+    running = false;
+    layer.classList.remove("on");
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+    setTimeout(() => { hearts = []; ctx.clearRect(0, 0, W, H); }, 560);
+  }
+
+  document.getElementById("surpriseBtn").addEventListener("click", e => {
+    e.stopPropagation();
+    open();
+  });
+  layer.addEventListener("click", close);
+  addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+})();
+</script>
+</body>
+</html>
